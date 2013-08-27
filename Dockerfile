@@ -7,20 +7,27 @@
 # docker run -d <imageid>
 # redis-cli
 #
-# VERSION		0.2
-# DOCKER-VERSION	0.4.0
+# VERSION		0.3
+# DOCKER-VERSION	0.6.0
 
-from	ubuntu:12.04
-run	echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
-run	apt-get -y update
-run	apt-get -y install wget git redis-server supervisor
-run	wget -O - http://nodejs.org/dist/v0.8.23/node-v0.8.23-linux-x64.tar.gz | tar -C /usr/local/ --strip-components=1 -zxv
-run	npm install hipache -g
-run	mkdir -p /var/log/supervisor
-add	./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-add	./config/config_dev.json /usr/local/lib/node_modules/hipache/config/config_dev.json
-add	./config/config_test.json /usr/local/lib/node_modules/hipache/config/config_test.json
-add	./config/config.json /usr/local/lib/node_modules/hipache/config/config.json
-expose	80
-expose	6379
-cmd	["supervisord", "-n"]
+# CHANGES by vlebedev:
+#   - Node version pumped up to 0.10.16
+#   - Wget could be slow and pipe to tar may broke, therefore save to /tmp first
+#     then untar and remove temp file
+
+from    ubuntu:12.04
+run     echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
+run     apt-get -y update
+run     apt-get -y install wget git redis-server supervisor
+run     wget -O /tmp/node.tar.gz http://nodejs.org/dist/v0.10.16/node-v0.10.16-linux-x64.tar.gz
+run     tar -C /usr/local/ --strip-components=1 -zxvf /tmp/node.tar.gz
+run     rm /tmp/node.tar.gz
+run     npm install hipache -g
+run     mkdir -p /var/log/supervisor
+add     ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+add     ./config/config_dev.json /usr/local/lib/node_modules/hipache/config/config_dev.json
+add     ./config/config_test.json /usr/local/lib/node_modules/hipache/config/config_test.json
+add     ./config/config.json /usr/local/lib/node_modules/hipache/config/config.json
+expose  80
+expose  6379
+cmd     ["supervisord", "-n"]
